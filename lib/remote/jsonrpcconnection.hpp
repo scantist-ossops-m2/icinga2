@@ -56,8 +56,8 @@ public:
 
 	void Disconnect();
 
-	void SendMessage(const Dictionary::Ptr& request);
-	void SendRawMessage(const String& request);
+	bool SendMessage(const Dictionary::Ptr& request);
+	bool SendRawMessage(const String& request);
 
 	static Value HeartbeatAPIHandler(const intrusive_ptr<MessageOrigin>& origin, const Dictionary::Ptr& params);
 
