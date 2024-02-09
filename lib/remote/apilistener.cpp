@@ -1376,7 +1376,6 @@ void ApiListener::OpenLogFile()
 	}
 
 	m_LogFile = new StdioStream(fp, true);
-	m_LogMessageCount = 0;
 	SetLogMessageTimestamp(Utility::GetTime());
 }
 
@@ -1406,6 +1405,9 @@ void ApiListener::RotateLogFile()
 	if (!Utility::PathExists(newpath)) {
 		try {
 			Utility::RenameFile(oldpath, newpath);
+
+			// We're rotating the current log file, so reset the log message counter as well.
+			m_LogMessageCount = 0;
 		} catch (const std::exception& ex) {
 			Log(LogCritical, "ApiListener")
 				<< "Cannot rotate replay log file from '" << oldpath << "' to '"
