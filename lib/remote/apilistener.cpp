@@ -506,7 +506,16 @@ void ApiListener::ListenerCoroutineProc(boost::asio::yield_context yc, const Sha
 
 			server->async_accept(socket.lowest_layer(), yc);
 
-			auto remoteEndpoint (socket.lowest_layer().remote_endpoint());
+			String remoteEndpoint("(unknown endpoint)");
+			{
+				boost::system::error_code ec;
+				boost::asio::ip::tcp::endpoint endpoint (socket.remote_endpoint(ec));
+				if (!ec) {
+					std::ostringstream os;
+					os << endpoint;
+					remoteEndpoint = os.str();
+				}
+			}
 
 			if (!crlPath.IsEmpty()) {
 				time_t currentCreationTime = Utility::GetFileCreationTime(crlPath);
