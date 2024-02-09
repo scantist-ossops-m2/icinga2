@@ -50,6 +50,7 @@ public:
 	double GetTimestamp() const;
 	String GetIdentity() const;
 	bool IsAuthenticated() const;
+	bool IsShuttingDown() const;
 	Endpoint::Ptr GetEndpoint() const;
 	Shared<AsioTlsStream>::Ptr GetStream() const;
 	ConnectionRole GetRole() const;

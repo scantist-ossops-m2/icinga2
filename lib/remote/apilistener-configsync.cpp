@@ -453,6 +453,7 @@ void ApiListener::SendRuntimeConfigObjects(const JsonRpcConnection::Ptr& aclient
 	Log(LogInformation, "ApiListener")
 		<< "Syncing runtime objects to endpoint '" << endpoint->GetName() << "'.";
 
+	bool syncCancelled = false;
 	for (const Type::Ptr& type : Type::GetAllTypes()) {
 		auto *dtype = dynamic_cast<ConfigType *>(type.get());
 
@@ -460,6 +461,11 @@ void ApiListener::SendRuntimeConfigObjects(const JsonRpcConnection::Ptr& aclient
 			continue;
 
 		for (const ConfigObject::Ptr& object : dtype->GetObjects()) {
+			if (aclient->IsShuttingDown()) {
+				syncCancelled = true;
+				break;
+			}
+
 			/* don't sync objects for non-matching parent-child zones */
 			if (!azone->CanAccessObject(object))
 				continue;
@@ -467,8 +473,17 @@ void ApiListener::SendRuntimeConfigObjects(const JsonRpcConnection::Ptr& aclient
 			/* send the config object to the connected client */
 			UpdateConfigObject(object, nullptr, aclient);
 		}
+
+		if (syncCancelled) {
+			break;
+		}
 	}
 
-	Log(LogInformation, "ApiListener")
-		<< "Finished syncing runtime objects to endpoint '" << endpoint->GetName() << "'.";
+	if (syncCancelled) {
+		Log(LogInformation, "ApiListener")
+			<< "Endpoint '" << endpoint->GetName() << "' disconnected while syncing runtime objects.";
+	} else {
+		Log(LogInformation, "ApiListener")
+			<< "Finished syncing runtime objects to endpoint '" << endpoint->GetName() << "'.";
+	}
 }
