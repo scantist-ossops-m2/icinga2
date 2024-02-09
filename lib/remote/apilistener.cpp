@@ -924,7 +924,7 @@ void ApiListener::SyncClient(const JsonRpcConnection::Ptr& aclient, const Endpoi
 		Log(LogInformation, "ApiListener")
 			<< "Finished sending runtime config updates for endpoint '" << endpoint->GetName() << "' in zone '" << eZone->GetName() << "'.";
 
-		if (!needSync) {
+		if (!needSync || aclient->IsShuttingDown()) {
 			ObjectLock olock2(endpoint);
 			endpoint->SetSyncing(false);
 			return;
