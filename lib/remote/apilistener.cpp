@@ -1537,10 +1537,16 @@ void ApiListener::ReplayLog(const JsonRpcConnection::Ptr& client)
 						continue;
 				}
 
-				bool sent;
-
 				try  {
-					sent = client->SendRawMessage(pmessage->Get("message"));
+					if (!client->SendRawMessage(pmessage->Get("message"))) {
+						Log(LogInformation, "ApiListener")
+							<< "Endpoint '" << endpoint->GetName() << "' disconnected while replaying log.";
+
+						stopReplay = true;
+						break;
+					}
+
+					++count;
 				} catch (const std::exception& ex) {
 					Log(LogWarning, "ApiListener")
 						<< "Error while replaying log for endpoint '" << endpoint->GetName() << "': " << DiagnosticInformation(ex, false);
@@ -1551,16 +1557,6 @@ void ApiListener::ReplayLog(const JsonRpcConnection::Ptr& client)
 					stopReplay = true;
 					break;
 				}
-
-				if (!sent) {
-					Log(LogInformation, "ApiListener")
-						<< "Endpoint '" << endpoint->GetName() << "' disconnected while replaying log.";
-
-					stopReplay = true;
-					break;
-				}
-
-				++count;
 
 				peer_ts = pmessage->Get("timestamp");
 
