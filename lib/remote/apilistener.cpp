@@ -713,12 +713,9 @@ void ApiListener::NewClientHandlerInternal(
 
 	bool willBeShutDown = false;
 
-	Defer shutDownIfNeeded ([&sslConn, &willBeShutDown, &yc]() {
+	Defer shutDownIfNeeded ([&client, &strand, &willBeShutDown, &yc]() {
 		if (!willBeShutDown) {
-			// Ignore the error, but do not throw an exception being swallowed at all cost.
-			// https://github.com/Icinga/icinga2/issues/7351
-			boost::system::error_code ec;
-			sslConn.async_shutdown(yc[ec]);
+			client->GracefulDisconnect(*strand, yc);
 		}
 	});
 
