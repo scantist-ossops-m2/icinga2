@@ -78,9 +78,6 @@ void HttpServerConnection::Disconnect()
 		if (!m_ShuttingDown) {
 			m_ShuttingDown = true;
 
-			Log(LogInformation, "HttpServerConnection")
-				<< "HTTP client disconnected (from " << m_PeerAddress << ")";
-
 			/*
 			 * Do not swallow exceptions in a coroutine.
 			 * https://github.com/Icinga/icinga2/issues/7351
@@ -95,6 +92,7 @@ void HttpServerConnection::Disconnect()
 
 			m_Stream->lowest_layer().cancel(ec);
 
+			m_Stream->next_layer().next_layer().expires_after(std::chrono::seconds(10));
 			m_Stream->next_layer().async_shutdown(yc[ec]);
 
 			m_Stream->lowest_layer().shutdown(m_Stream->lowest_layer().shutdown_both, ec);
@@ -104,6 +102,9 @@ void HttpServerConnection::Disconnect()
 			if (listener) {
 				listener->RemoveHttpClient(this);
 			}
+
+			Log(LogInformation, "HttpServerConnection")
+				<< "HTTP client disconnected (from " << m_PeerAddress << ")";
 		}
 	});
 }

@@ -19,6 +19,8 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/ssl.hpp>
 
 namespace icinga
 {
@@ -63,11 +65,13 @@ struct UnbufferedAsioTlsStreamParams
 	const String& Hostname;
 };
 
-typedef SeenStream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> AsioTcpTlsStream;
+typedef SeenStream<boost::beast::ssl_stream<boost::beast::tcp_stream>> AsioTcpTlsStream;
 
 class UnbufferedAsioTlsStream : public AsioTcpTlsStream
 {
 public:
+	typedef typename next_layer_type::socket_type lowest_layer_type;
+
 	inline
 	UnbufferedAsioTlsStream(UnbufferedAsioTlsStreamParams& init)
 		: AsioTcpTlsStream(init.IoContext, init.SslContext), m_VerifyOK(true), m_Hostname(init.Hostname)
@@ -94,6 +98,32 @@ public:
 		BeforeHandshake(type);
 
 		return AsioTcpTlsStream::handshake(type, std::forward<Args>(args)...);
+	}
+
+	/// Get a reference to the lowest layer.
+	/**
+	 * This function returns a reference to the lowest layer in a stack of
+	 * stream layers.
+	 *
+	 * @return A reference to the lowest layer in the stack of stream layers.
+	 * Ownership is not transferred to the caller.
+	 */
+	lowest_layer_type& lowest_layer()
+	{
+		return next_layer().socket();
+	}
+
+	/// Get a reference to the lowest layer.
+	/**
+	 * This function returns a reference to the lowest layer in a stack of
+	 * stream layers.
+	 *
+	 * @return A reference to the lowest layer in the stack of stream layers.
+	 * Ownership is not transferred to the caller.
+	 */
+	const lowest_layer_type& lowest_layer() const
+	{
+		return next_layer().socket();
 	}
 
 private:
