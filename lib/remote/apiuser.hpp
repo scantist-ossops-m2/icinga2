@@ -22,6 +22,7 @@
 
 #include "remote/i2-remote.hpp"
 #include "remote/apiuser.thpp"
+#include "base/dictionary.hpp"
 
 namespace icinga
 {
@@ -36,6 +37,8 @@ public:
 	DECLARE_OBJECTNAME(ApiUser);
 
 	static ApiUser::Ptr GetByClientCN(const String& cn);
+	Dictionary::Ptr GetPasswordDictionary(void);
+
 };
 
 }
