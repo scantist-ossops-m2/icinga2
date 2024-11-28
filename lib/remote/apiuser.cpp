@@ -25,6 +25,26 @@ using namespace icinga;
 
 REGISTER_TYPE(ApiUser);
 
+/* Return split password hash as Dictionary */
+Dictionary::Ptr ApiUser::GetPasswordDict(void)
+{
+	String passwd = this->GetPasswordHash();
+	if (passwd.IsEmpty() || passwd[0] != '$')
+		return NULL;
+
+	String::SizeType salt_begin = passwd.FindFirstOf('$', 1);
+	String::SizeType passwd_begin = passwd.FindFirstOf('$', salt_begin+1);
+
+	if (salt_begin == String::NPos || salt_begin == 1 || passwd_begin == String::NPos)
+		return NULL;
+
+	Dictionary::Ptr passwd_dict = new Dictionary();
+	passwd_dict->Set("algorithm", passwd.SubStr(1, salt_begin-1));
+	passwd_dict->Set("salt", passwd.SubStr(salt_begin+1, passwd_begin - salt_begin - 1));
+	passwd_dict->Set("password", passwd.SubStr(passwd_begin+1));
+
+	return passwd_dict;
+}
 ApiUser::Ptr ApiUser::GetByClientCN(const String& cn)
 {
 	BOOST_FOREACH(const ApiUser::Ptr& user, ConfigType::GetObjectsByType<ApiUser>()) {
